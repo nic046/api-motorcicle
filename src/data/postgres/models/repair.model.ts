@@ -1,14 +1,23 @@
-import { BaseEntity, Column, Entity, PrimaryColumn, PrimaryGeneratedColumn } from "typeorm";
+import {
+  BaseEntity,
+  Column,
+  Entity,
+  PrimaryGeneratedColumn,
+} from "typeorm";
 
 @Entity()
 export class Repair extends BaseEntity {
 
-    @PrimaryGeneratedColumn("uuid")
-    id: string
+  @PrimaryGeneratedColumn("uuid")
+  id: string;
 
-    @Column("date")
-    date: Date
+  @Column("date", {
+        default: () => "CURRENT_TIMESTAMP"
+    })
+  date: Date;
 
-    @Column("boolean")
-    status: boolean
+  @Column("bool", {
+    default: true,
+  })
+  status: boolean;
 }

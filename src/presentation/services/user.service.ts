@@ -1,4 +1,5 @@
 import { User } from "../../data";
+import { CustomError } from "../../domain";
 
 export class UserService {
   constructor() {}
@@ -7,7 +8,7 @@ export class UserService {
     try {
       return await User.find();
     } catch (error) {
-      throw new Error("Error getting users");
+      throw CustomError.internalServer("Error getting the user")
     }
   }
   async showOneUser(id: string) {
@@ -17,9 +18,8 @@ export class UserService {
         status: true,
       },
     });
-    
     if(!user){
-        throw new Error("User not found");
+        throw CustomError.notFound("User not found")
     }
     return user
   }
@@ -36,7 +36,7 @@ export class UserService {
     try {
       return await user.save();
     } catch (error) {
-      throw new Error(`Error creating user: ${error}`);
+      throw CustomError.internalServer("Error creating user")
     }
   }
 
@@ -50,19 +50,20 @@ export class UserService {
     try {
         return await user.save()
     } catch (error) {
-        throw new Error("Error updating user")
+        throw CustomError.internalServer("Error updating user");
     }
   }
 
   async deleteUser(id: string) {
     const user = await this.showOneUser(id)
 
+    console.log("delete", user);
     user.status = false
 
    try {
-    user.save()
+    return await user.save()
    } catch (error) {
-    throw new Error("Error deleting user")
+    throw CustomError.internalServer("Error deleting post");
    }
   }
 }

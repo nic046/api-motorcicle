@@ -1,97 +1,78 @@
 import { Request, Response } from "express";
-
-interface Repair {
-  id: number;
-  date: Date;
-  status: boolean;
-}
-
-const repairs: Repair[] = [];
-let repairId = 1;
+import { RepairService } from "../services/repairs.service";
+import { CustomError, CreateRepairDTO } from "../../domain";
 
 export class RepairController {
-  constructor() {}
+  constructor(private readonly repairService: RepairService) {}
+
+  private handleError = (error: unknown, res: Response) => {
+    if (error instanceof CustomError) {
+      return res.status(error.statusCode).json({ message: error.message });
+    }
+
+    console.log(error);
+    return res.status(500).json({ message: "Something went very wrong" });
+  };
 
   createRepair = async (req: Request, res: Response) => {
-    const { date, status } = req.body;
+    const [error, createRepairDTO] = CreateRepairDTO.create(req.body);
 
-    if (!date) {
-      return res.status(400).json({ message: "Date is require" });
-    }
-    if (!status) {
-      return res.status(400).json({ message: "Status is require" });
-    }
-    const newRepair: Repair = {
-      id: repairId++,
-      date,
-      status,
-    };
+    if (error) return res.status(422).json({ message: error });
 
-    repairs.push(newRepair);
-    return res.status(201).json({
-      message: "Repair has been created",
-      newRepair,
-    });
+    this.repairService
+      .createRepair(createRepairDTO!)
+      .then((data) => {
+        return res.status(201).json(data);
+      })
+      .catch((error: any) => this.handleError(error, res));
   };
 
   getAllRepairs = async (req: Request, res: Response) => {
-    return res.status(201).json({
-      repairs,
-    });
+    this.repairService
+      .showRepairs()
+      .then((data) => {
+        return res.status(201).json(data);
+      })
+      .catch((error: any) => this.handleError(error, res));
   };
+
   getOneRepair = async (req: Request, res: Response) => {
     const { id } = req.params;
-    const repairId = +id;
-
-    const repair = repairs.find((r) => r.id === repairId);
-    if (!repair) {
-      return res
-        .status(400)
-        .json({ message: `Repair not found with id ${repairId}` });
-    }
-
-    return res.status(201).json({
-      repair,
-    });
+    this.repairService
+      .showOneRepair(id)
+      .then((data: any) => {
+        res.status(200).json(data);
+      })
+      .catch((error: any) => this.handleError(error, res));
   };
 
   editRepair = async (req: Request, res: Response) => {
+    const [error, createRepairDTO] = CreateRepairDTO.create(req.body);
+
+    if (error) return res.status(422).json({ message: error });
+
     const { id } = req.params;
-    const repairId = +id;
-    const index = repairs.findIndex((r) => r.id === repairId);
 
-    if (index === -1) {
-      return res
-        .status(400)
-        .json({ message: `Repair not found with id ${repairId}` });
-    }
-
-    const { date, status } = req.body;
-
-    repairs[index] = {
-      id: repairId,
-      date,
-      status,
-    };
-    return res.status(200).json({
-      message: "Repair has been edit",
-    });
+    this.repairService
+      .updateRepair(id, createRepairDTO!)
+      .then((data: any) => {
+        return res.status(200).json(data);
+      })
+      .catch((error: any) => this.handleError(error, res));
   };
 
   deleteRepair = async (req: Request, res: Response) => {
+    const [error, createRepairDTO] = CreateRepairDTO.create(req.body);
+
+    if (error) return res.status(422).json({ message: error });
+
     const { id } = req.params;
-    const repairId = +id;
-    const index = repairs.findIndex((r) => r.id === repairId);
 
-    if (index === -1) {
-      return res
-        .status(400)
-        .json({ message: `Repair not found with id ${repairId}` });
-    }
-
-    repairs.splice(index, 1)
-    return res.status(200).json({
-      message: "Repair has been deleted",
-    });
-  }
+    this.repairService
+      .deleteRepair(id)
+      .then((data: any) => {
+        return res.status(204).json(data);
+      })
+      .catch((error: any) => this.handleError(error, res));
+  };
 }

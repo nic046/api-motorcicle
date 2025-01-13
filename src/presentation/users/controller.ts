@@ -1,49 +1,39 @@
 import { Request, Response } from "express";
 import { UserService } from "../services/user.service";
-import { CreateUserDTO } from "../../domain";
-
-interface User {
-  id: number;
-  name: string;
-  email: string;
-  password: string;
-  role: string;
-  status: boolean;
-}
+import { CreateUserDTO, CustomError } from "../../domain";
 
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  createUser = async (req: Request, res: Response) => {
-    const [error, createUserDTO] = CreateUserDTO.create(req.body)
+  private handleError = (error: unknown, res: Response) => {
+    if(error instanceof CustomError) {
+      return res.status(error.statusCode).json({ message: error.message })
+    }
 
-    if(error) return res.status(422).json({ message: error })
+    console.log(error);
+    return res.status(500).json({ message: "Something went very wrong" })
+  }
+
+  createUser = async (req: Request, res: Response) => {
+    const [error, createUserDTO] = CreateUserDTO.create(req.body);
+
+    if (error) return res.status(422).json({ message: error });
 
     this.userService
       .createUser(createUserDTO!)
       .then((data) => {
         return res.status(201).json(data);
       })
-      .catch((error) => {
-        return res.status(500).json({
-          message: "Error creating post",
-          error,
-        });
-      });
+      .catch((error: any) => this.handleError(error, res));
   };
 
   getAllUser = async (req: Request, res: Response) => {
     this.userService
       .showUsers()
       .then((data) => {
-        return res.status(200).json(data);
+        return res.status(201).json(data);
       })
-      .catch((error) => {
-        return res.status(500).json({
-          message: "Error finding all users",
-          error,
-        });
-      });
+      .catch((error: any) => this.handleError(error, res));
   };
 
   getOneUser = async (req: Request, res: Response) => {
@@ -51,20 +41,15 @@ export class UserController {
     this.userService
       .showOneUser(id)
       .then((data: any) => {
-        res.status(200).json(data);
+        res.status(201).json(data);
       })
-      .catch((error: any) => {
-        res.status(500).json({
-          message: "Error getting one user",
-          error,
-        });
-      });
+      .catch((error: any) => this.handleError(error, res));
   };
 
   editUser = async (req: Request, res: Response) => {
-    const [error, createUserDTO] = CreateUserDTO.create(req.body)
+    const [error, createUserDTO] = CreateUserDTO.create(req.body);
 
-    if(error) return res.status(422).json({ message: error })
+    if (error) return res.status(422).json({ message: error });
 
     const { id } = req.params;
 
@@ -73,27 +58,17 @@ export class UserController {
       .then((data) => {
         return res.status(200).json(data);
       })
-      .catch((error: any) => {
-        res.status(500).json({
-          message: "Error editing user",
-          error,
-        });
-      });
+      .catch((error: any) => this.handleError(error, res));
   };
 
   deleteUser = async (req: Request, res: Response) => {
     const { id } = req.params;
-    
+
     this.userService
-    .deleteUser(id)
-    .then(() => {
-      res.status(204).json(null)
-    })
-    .catch((error: any) => {
-      res.status(500).json({
-        message: "Error getting one user",
-        error,
-      });
-    });
+      .deleteUser(id)
+      .then(() => {
+        res.status(204).json(null);
+      })
+      .catch((error: any) => this.handleError(error, res));
   };
 }

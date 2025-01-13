@@ -1,17 +1,20 @@
 import { Router } from "express";
 import { RepairController } from "./controller";
+import { RepairService } from "../services/repairs.service";
 
 export class RepairRouter {
-    static get routes() : Router {
-        const router = Router();
+  static get routes(): Router {
+    const router = Router();
 
-        const repairController = new RepairController();
-        router.get("/", repairController.getAllRepairs)
-        router.post("/", repairController.createRepair)
-        router.get("/:id", repairController.getOneRepair)
-        router.patch("/:id", repairController.editRepair);
-        router.delete("/:id", repairController.deleteRepair);
+    const repairService = new RepairService();
+    const repairController = new RepairController(repairService);
 
-        return router
-    }
+    router.get("/", repairController.getAllRepairs);
+    router.post("/", repairController.createRepair);
+    router.get("/:id", repairController.getOneRepair);
+    router.patch("/:id", repairController.editRepair);
+    router.delete("/:id", repairController.deleteRepair);
+
+    return router;
+  }
 }
