@@ -1,14 +1,11 @@
 export class CreateRepairDTO {
-    constructor(
-        public readonly date: Date,
-    ){}
+  constructor(public readonly date: Date) {}
 
-    static create(object: { [key: string]: any }): [string?, CreateRepairDTO?] {
-        const {date} = object
+  static create(object: { [key: string]: any }): [string?, CreateRepairDTO?] {
+    const { date } = object;
 
-        //if(!date) return ["Missing date"]
-        if(new Date(date) > new Date()) return ["Date cannot be in the future"]
+    if (new Date(date) > new Date()) return ["Date cannot be in the future"];
 
-        return [undefined, new CreateRepairDTO(date)]
-    }
+    return [undefined, new CreateRepairDTO(date)];
+  }
 }

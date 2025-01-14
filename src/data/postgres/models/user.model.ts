@@ -1,5 +1,15 @@
 import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from "typeorm";
 
+export enum Role {
+  EMPLOYEE = "EMPLOYEE",
+  CLIENT = "CLIENT"
+}
+
+export enum Status {
+  AVAIBLE = "AVAIBLE",
+  DISABLED = "DISABLED"
+}
+
 @Entity()
 export class User extends BaseEntity {
   @PrimaryGeneratedColumn("uuid")
@@ -24,15 +34,15 @@ export class User extends BaseEntity {
   })
   password: string;
 
-  @Column("varchar", {
-    length: 100,
-    nullable: false,
-    default: "client",
+  @Column("enum", {
+    enum: Role,
+    default: Role.CLIENT,
   })
   role: string;
 
-  @Column("bool", {
-    default: true,
+  @Column("enum", {
+    enum: Status,
+    default: Status.AVAIBLE,
   })
-  status: boolean;
+  status: string;
 }

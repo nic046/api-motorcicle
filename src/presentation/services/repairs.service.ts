@@ -1,4 +1,4 @@
-import { Repair } from "../../data";
+import { Repair, RepairStatus } from "../../data";
 import { CustomError } from "../../domain";
 
 export class RepairService {
@@ -15,7 +15,7 @@ export class RepairService {
     const repair = await Repair.findOne({
       where: {
         id,
-        status: true,
+        status: RepairStatus.PENDING,
       },
     });
 
@@ -34,6 +34,7 @@ export class RepairService {
     try {
       return await repair.save();
     } catch (error) {
+      console.log(error);
       throw CustomError.internalServer("Error creating Repair")
     }
   }
@@ -53,7 +54,7 @@ export class RepairService {
   async deleteRepair(id: string) {
     const repair = await this.showOneRepair(id);
 
-    repair.status = false;
+    repair.status = RepairStatus.PENDING;
 
     try {
       return await repair.save();

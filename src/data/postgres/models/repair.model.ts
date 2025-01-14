@@ -1,23 +1,30 @@
-import {
-  BaseEntity,
-  Column,
-  Entity,
-  PrimaryGeneratedColumn,
-} from "typeorm";
+import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+
+export enum RepairStatus {
+  PENDING = "PENDING",
+  COMPLETED = "COMPLETED",
+  CANCELLED = "CANCELLED",
+}
 
 @Entity()
 export class Repair extends BaseEntity {
-
   @PrimaryGeneratedColumn("uuid")
   id: string;
 
   @Column("date", {
-        default: () => "CURRENT_TIMESTAMP"
-    })
+    nullable: false,
+    default: () => "CURRENT_TIMESTAMP",
+  })
   date: Date;
 
-  @Column("bool", {
-    default: true,
+  @Column("enum", {
+    enum: RepairStatus,
+    default: RepairStatus.PENDING
   })
-  status: boolean;
+  status: string;
+
+  @Column("varchar", {
+    nullable: true,
+  })
+  userId: string;
 }

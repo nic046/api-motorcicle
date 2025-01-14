@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { UserService } from "../services/user.service";
 import { CreateUserDTO, CustomError } from "../../domain";
+import { UpdateUserDTO } from "../../domain/dtos/user/update.dto";
 
 export class UserController {
   constructor(private readonly userService: UserService) {}
@@ -47,14 +48,14 @@ export class UserController {
   };
 
   editUser = async (req: Request, res: Response) => {
-    const [error, createUserDTO] = CreateUserDTO.create(req.body);
+    const [error, updateUserDTO] = UpdateUserDTO.create(req.body);
 
     if (error) return res.status(422).json({ message: error });
 
     const { id } = req.params;
 
     this.userService
-      .updateUser(id, createUserDTO!)
+      .updateUser(id, updateUserDTO!)
       .then((data) => {
         return res.status(200).json(data);
       })

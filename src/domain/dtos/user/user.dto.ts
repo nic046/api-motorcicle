@@ -1,3 +1,5 @@
+import { Role } from "../../../data";
+
 export class CreateUserDTO {
     constructor(
         public readonly name: string,
@@ -14,14 +16,18 @@ export class CreateUserDTO {
         if(name.length <= 3) return ["Name must have at least 3 words"]
         if(!email) return ["Missing email"];
         if(email.length <= 4) return ["Email must have at least 4 words"]
+
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) return ["Invalid email format"];
+
         if(!password) return ["Missing password"];
         if(password.length <= 8) return ["Password must have at least 8 words"]
+
         const specialCharRegex = /[!@#$%^&*(),.?":{}|<>]/;
         if (!specialCharRegex.test(password)) return ["Password must contain at least one special character"];
+        
         if(!role) return ["Missing role"];
-        if (role !== "client" && role !== "employee") return ["Role must be 'client' or 'employee'"];
+        if (role !== Role.CLIENT && role !== Role.EMPLOYEE) return ["Role must be 'CLIENT' or 'EMPLOYEE'"];
 
         return [undefined, new CreateUserDTO(name, email, password, role)]
     }
