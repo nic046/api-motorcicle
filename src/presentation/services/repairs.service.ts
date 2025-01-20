@@ -29,7 +29,10 @@ export class RepairService {
     const repair = new Repair();
 
     repair.date = repairData.date;
+    repair.motorsNumber = repairData.motorsNumber;
+    repair.description = repairData.description;
     repair.status = repairData.status;
+    repair.userId = repairData.userId;
 
     try {
       return await repair.save();
@@ -39,10 +42,10 @@ export class RepairService {
     }
   }
 
-  async updateRepair(id: string, repairData: any) {
+  async updateRepair(id: string) {
     const repair = await this.showOneRepair(id);
 
-    repair.date = repairData.date.toLowerCase().trim();
+    repair.status = RepairStatus.COMPLETED;
 
     try {
       return await repair.save();
@@ -54,7 +57,7 @@ export class RepairService {
   async deleteRepair(id: string) {
     const repair = await this.showOneRepair(id);
 
-    repair.status = RepairStatus.PENDING;
+    repair.status = RepairStatus.CANCELLED;
 
     try {
       return await repair.save();

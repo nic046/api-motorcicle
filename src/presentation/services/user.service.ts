@@ -1,12 +1,16 @@
+import { encriptAdapter, JwtAdapter } from "../../config";
 import { Status, User } from "../../data";
-import { CustomError } from "../../domain";
+import { CustomError, LoginUserDTO } from "../../domain";
+import { EmailService } from "./email.service";
 
 export class UserService {
-  constructor() {}
+  constructor(private readonly emailService: EmailService) {}
 
   async showUsers() {
     try {
-      return await User.find();
+      return await User.find({
+        select: ["id", "name", "email", "role", "status"], 
+      });
     } catch (error) {
       throw CustomError.internalServer("Error getting the user");
     }
@@ -17,6 +21,7 @@ export class UserService {
         id,
         status: Status.AVAIBLE,
       },
+      select: ["id", "name", "email", "role", "status"], 
     });
     if (!user) {
       throw CustomError.notFound("User not found");
@@ -24,7 +29,7 @@ export class UserService {
     return user;
   }
 
-  async createUser(userData: any) {
+  async register(userData: any) {
     const user = new User();
 
     user.name = userData.name;
@@ -34,11 +39,68 @@ export class UserService {
     user.status = userData.status;
 
     try {
-      return await user.save();
-    } catch (error) {
+      const dbUser = await user.save();
+
+      return {
+        id: dbUser.id,
+        email: dbUser.email,
+        role: dbUser.role,
+        status:dbUser.status
+      }
+    } catch (error: any) {
+      if (error.code === "23505") {
+        throw CustomError.badRequest(
+          `User with ${userData.email} already exist`
+        );
+      }
       throw CustomError.internalServer("Error creating user");
     }
   }
+
+  async login(credentials: LoginUserDTO) {
+    const user = await this.findUserByEmail(credentials.email)
+
+    const isMatching = encriptAdapter.compare(
+      credentials.password,
+      user.password
+    )
+
+    if (!isMatching) throw CustomError.unAuthorized("Invalid Credentials");
+
+    const token = await JwtAdapter.generateToken({ id: user.id });
+
+    return {
+      token: token,
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role
+      },
+    };
+  }
+
+  validateEmail = async (token: string) => {
+    const payload = await JwtAdapter.validateToken(token);
+    if (!payload) throw CustomError.badRequest("Invalid Token");
+
+    const { email } = payload as { email: string };
+    if (!email) throw CustomError.internalServer("Email not in token");
+
+    const user = await User.findOne({ where: { email } });
+    if (!user) throw CustomError.internalServer("Email not exist");
+
+    user.status = Status.AVAIBLE;
+
+    try {
+      await user.save();
+      return {
+        message: "Usuario creado",
+      };
+    } catch (error) {
+      throw CustomError.internalServer("Error activating account");
+    }
+  };
 
   async updateUser(id: string, userData: any) {
     const user = await this.showOneUser(id);
@@ -64,5 +126,19 @@ export class UserService {
     } catch (error) {
       throw CustomError.internalServer("Error deleting post");
     }
+  }
+
+  async findUserByEmail(email: string) {
+    const user = await User.findOne({
+      where: {
+        email,
+        status: Status.AVAIBLE,
+      },
+    });
+
+    if (!user)
+      throw CustomError.notFound(`User with email: ${email} not found`);
+
+    return user;
   }
 }

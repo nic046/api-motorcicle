@@ -47,14 +47,10 @@ export class RepairController {
   };
 
   editRepair = async (req: Request, res: Response) => {
-    const [error, createRepairDTO] = CreateRepairDTO.create(req.body);
-
-    if (error) return res.status(422).json({ message: error });
-
     const { id } = req.params;
 
     this.repairService
-      .updateRepair(id, createRepairDTO!)
+      .updateRepair(id)
       .then((data: any) => {
         return res.status(200).json(data);
       })
@@ -62,10 +58,6 @@ export class RepairController {
   };
 
   deleteRepair = async (req: Request, res: Response) => {
-    const [error, createRepairDTO] = CreateRepairDTO.create(req.body);
-
-    if (error) return res.status(422).json({ message: error });
-
     const { id } = req.params;
 
     this.repairService

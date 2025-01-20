@@ -1,13 +1,14 @@
-import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { BaseEntity, BeforeInsert, Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { encriptAdapter } from "../../../config";
 
 export enum Role {
   EMPLOYEE = "EMPLOYEE",
-  CLIENT = "CLIENT"
+  CLIENT = "CLIENT",
 }
 
 export enum Status {
   AVAIBLE = "AVAIBLE",
-  DISABLED = "DISABLED"
+  DISABLED = "DISABLED",
 }
 
 @Entity()
@@ -45,4 +46,9 @@ export class User extends BaseEntity {
     default: Status.AVAIBLE,
   })
   status: string;
+
+  @BeforeInsert()
+    encryptedPassword(){
+        this.password = encriptAdapter.hash(this.password)
+    }
 }

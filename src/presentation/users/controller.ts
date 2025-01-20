@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { UserService } from "../services/user.service";
-import { CreateUserDTO, CustomError } from "../../domain";
+import { RegisterUserDTO, CustomError, LoginUserDTO } from "../../domain";
 import { UpdateUserDTO } from "../../domain/dtos/user/update.dto";
 
 export class UserController {
@@ -15,17 +15,39 @@ export class UserController {
     return res.status(500).json({ message: "Something went very wrong" })
   }
 
-  createUser = async (req: Request, res: Response) => {
-    const [error, createUserDTO] = CreateUserDTO.create(req.body);
+  register = async (req: Request, res: Response) => {
+    const [error, registerUserDTO] = RegisterUserDTO.create(req.body);
 
     if (error) return res.status(422).json({ message: error });
 
     this.userService
-      .createUser(createUserDTO!)
+      .register(registerUserDTO!)
       .then((data) => {
         return res.status(201).json(data);
       })
       .catch((error: any) => this.handleError(error, res));
+  };
+
+  login = async (req: Request, res: Response) => {
+    const [error, loginUserDTO] = LoginUserDTO.create(req.body);
+
+    if (error) return res.status(422).json({ message: error });
+
+    this.userService
+      .login(loginUserDTO!)
+      .then((data) => {
+        return res.status(201).json(data);
+      })
+      .catch((error: any) => this.handleError(error, res));
+  };
+
+  validateAccount = (req: Request, res: Response) => {
+    const { token } = req.params;
+
+    this.userService
+      .validateEmail(token)
+      .then((data) => res.status(200).json(data))
+      .catch((error) => this.handleError(error, res));
   };
 
   getAllUser = async (req: Request, res: Response) => {
