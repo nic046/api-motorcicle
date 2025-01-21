@@ -2,7 +2,6 @@ import { Router } from "express";
 import { UserRouter } from "./users/router";
 import { RepairRouter } from "./repairs/router";
 import { AuthMiddleware } from "./middlewares/auth.middleware";
-import { Role } from "../data";
 
 export class AppRoutes {
   static get routes(): Router {
@@ -12,9 +11,7 @@ export class AppRoutes {
 
     router.use(AuthMiddleware.protect)
 
-    const restric = AuthMiddleware.restricTo(Role.EMPLOYEE);
-
-    router.use("/api/repairs",restric, RepairRouter.routes);
+    router.use("/api/repairs", RepairRouter.routes);
 
     return router;
   }

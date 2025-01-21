@@ -1,5 +1,18 @@
+import { z } from "zod";
 import { regularExp } from "../../../config";
-import { Role } from "../../../data";
+
+const loginUserSchema = z.object({
+  email: z
+    .string({ required_error: "Email is required" })
+    .min(4, { message: "Email must have at least 4 characters" })
+    .regex(regularExp.email, { message: "Invalid email format" }),
+  password: z
+    .string({ required_error: "Password is required" })
+    .min(8, { message: "Password must have at least 8 characters" })
+    .regex(regularExp.password, {
+      message: "Password must contain at least one special character",
+    }),
+});
 
 export class LoginUserDTO {
   constructor(
@@ -10,17 +23,12 @@ export class LoginUserDTO {
   static create(object: { [key: string]: any }): [string?, LoginUserDTO?] {
     const { email, password} = object;
 
-    if (!email) return ["Missing email"];
-    if (email.length <= 4) return ["Email must have at least 4 words"];
+    const result = loginUserSchema.safeParse(object);
 
-    if (!regularExp.email.test(email)) return ["Invalid email format"];
-
-    if (!password) return ["Missing password"];
-    if (password.length <= 8) return ["Password must have at least 8 words"];
-
-    if (!regularExp.password.test(password))
-      return ["Password must contain at least one special character"];
-
+    if (!result.success) {
+      const errorMessages = result.error.issues.map((e) => e.message).join(" --- ");
+      return [errorMessages];
+    }
 
     return [undefined, new LoginUserDTO(email, password)];
   }

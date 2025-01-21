@@ -1,4 +1,21 @@
-import { regularExp } from "../../../config";
+import { z } from "zod";
+
+const createRepairSchema = z.object({
+  date: z
+    .string({ message: "Date is required" })
+    .refine((val) => !isNaN(Date.parse(val)), {
+      message: "Invalid date format",
+    }),
+  motors: z.string({ message: "Motors field is required" }).min(2, {
+    message: "Motors field must have at least 2 characters",
+  }),
+  description: z
+    .string({ message: "Description is required" })
+    .min(1, { message: "Description cannot be empty" }),
+  userId: z.string({ message: "UUID is required" }).uuid({
+    message: "Invalid UUID format",
+  }),
+});
 
 export class CreateRepairDTO {
   constructor(
@@ -6,18 +23,21 @@ export class CreateRepairDTO {
     public readonly userId: string,
     public readonly motorsNumber: string,
     public readonly description: string
-) {}
+  ) {}
 
   static create(object: { [key: string]: any }): [string?, CreateRepairDTO?] {
     const { date, userId, motorsNumber, description } = object;
 
-    if (new Date(date) > new Date()) return ["Date cannot be in the future"];
-    if (!userId) return ["Missing user Id"]
-    if(!regularExp.uuid.test(userId)) return ["Uuid need to have a proper format"]
-    if(!motorsNumber) return ["Missing motor number"]
-    //TODO: Add a  control of bad words in description
-    if(!description) return ["Missing description"]
+    const result = createRepairSchema.safeParse(object);
 
-    return [undefined, new CreateRepairDTO(date, userId, motorsNumber, description)];
+    if (!result.success) {
+      const errorMessages = result.error.issues.map((e) => e.message).join(" --- ");
+      return [errorMessages];
+    }
+
+    return [
+      undefined,
+      new CreateRepairDTO(date, userId, motorsNumber, description),
+    ];
   }
 }

@@ -1,5 +1,28 @@
 import { regularExp } from "../../../config";
 import { Role } from "../../../data";
+import { z } from "zod";
+
+const registerUserSchema = z.object({
+  name: z
+    .string({ required_error: "Name is required" })
+    .min(3, { message: "Name must have at least 3 characters" }),
+  email: z
+    .string({ required_error: "Email is required" })
+    .min(4, { message: "Email must have at least 4 characters" })
+    .regex(regularExp.email, { message: "Invalid email format" }),
+  password: z
+    .string({ required_error: "Password is required" })
+    .min(8, { message: "Password must have at least 8 characters" })
+    .regex(regularExp.password, {
+      message: "Password must contain at least one special character",
+    }),
+  role: z
+    .string({ required_error: "Role is required" })
+    .refine(
+      (role) => role === Role.CLIENT || role === Role.EMPLOYEE,
+      { message: "Role must be 'CLIENT' or 'EMPLOYEE'" }
+    ),
+});
 
 export class RegisterUserDTO {
   constructor(
@@ -12,22 +35,12 @@ export class RegisterUserDTO {
   static create(object: { [key: string]: any }): [string?, RegisterUserDTO?] {
     const { name, email, password, role } = object;
 
-    if (!name) return ["Missing name"];
-    if (name.length <= 3) return ["Name must have at least 3 words"];
-    if (!email) return ["Missing email"];
-    if (email.length <= 4) return ["Email must have at least 4 words"];
+    const result = registerUserSchema.safeParse(object);
 
-    if (!regularExp.email.test(email)) return ["Invalid email format"];
-
-    if (!password) return ["Missing password"];
-    if (password.length <= 8) return ["Password must have at least 8 words"];
-
-    if (!regularExp.password.test(password))
-      return ["Password must contain at least one special character"];
-
-    if (!role) return ["Missing role"];
-    if (role !== Role.CLIENT && role !== Role.EMPLOYEE)
-      return ["Role must be 'CLIENT' or 'EMPLOYEE'"];
+    if (!result.success) {
+      const errorMessages = result.error.issues.map((e) => e.message).join(" --- ");
+      return [errorMessages];
+    }
 
     return [undefined, new RegisterUserDTO(name, email, password, role)];
   }
