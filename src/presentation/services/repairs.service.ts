@@ -1,14 +1,25 @@
 import { Repair, RepairStatus } from "../../data";
-import { CustomError } from "../../domain";
+import { CreateRepairDTO, CustomError } from "../../domain";
+import { UserService } from "./user.service";
 
 export class RepairService {
-  constructor() {}
+  constructor(public readonly userService: UserService) {}
 
   async showRepairs() {
     try {
-      return await Repair.find();
+      return await Repair.find({
+        relations: ["user"],
+        select: {
+          user: {
+            name: true,
+            email: true,
+            role: true,
+            status: true,
+          },
+        },
+      });
     } catch (error) {
-      throw CustomError.internalServer("Error getting the repair")
+      throw CustomError.internalServer("Error getting the repair");
     }
   }
   async showOneRepair(id: string) {
@@ -17,28 +28,39 @@ export class RepairService {
         id,
         status: RepairStatus.PENDING,
       },
+      relations: ["user"],
+      select: {
+        user: {
+          name: true,
+          email: true,
+          role: true,
+          status: true,
+        },
+      },
     });
 
     if (!repair) {
-      throw CustomError.notFound("Repair not found")
+      throw CustomError.notFound("Repair not found");
     }
     return repair;
   }
 
-  async createRepair(repairData: any) {
+  async createRepair(repairData: CreateRepairDTO) {
     const repair = new Repair();
+    const user = await this.userService.showOneUser(repairData.userId);
 
     repair.date = repairData.date;
     repair.motorsNumber = repairData.motorsNumber;
     repair.description = repairData.description;
-    repair.status = repairData.status;
     repair.userId = repairData.userId;
+
+    repair.user = user;
 
     try {
       return await repair.save();
     } catch (error) {
       console.log(error);
-      throw CustomError.internalServer("Error creating Repair")
+      throw CustomError.internalServer("Error creating Repair");
     }
   }
 

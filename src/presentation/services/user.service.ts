@@ -9,7 +9,19 @@ export class UserService {
   async showUsers() {
     try {
       return await User.find({
-        select: ["id", "name", "email", "role", "status"], 
+        relations: ["repairs"],
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+          status: true,
+          repairs: {
+            date: true,
+            motorsNumber: true,
+            description: true,
+          },
+        },
       });
     } catch (error) {
       throw CustomError.internalServer("Error getting the user");
@@ -21,7 +33,19 @@ export class UserService {
         id,
         status: Status.AVAIBLE,
       },
-      select: ["id", "name", "email", "role", "status"], 
+      relations: ["repairs"],
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        status: true,
+        repairs: {
+          date: true,
+          motorsNumber: true,
+          description: true,
+        },
+      },
     });
     if (!user) {
       throw CustomError.notFound("User not found");
@@ -45,8 +69,8 @@ export class UserService {
         id: dbUser.id,
         email: dbUser.email,
         role: dbUser.role,
-        status:dbUser.status
-      }
+        status: dbUser.status,
+      };
     } catch (error: any) {
       if (error.code === "23505") {
         throw CustomError.badRequest(
@@ -58,12 +82,12 @@ export class UserService {
   }
 
   async login(credentials: LoginUserDTO) {
-    const user = await this.findUserByEmail(credentials.email)
+    const user = await this.findUserByEmail(credentials.email);
 
     const isMatching = encriptAdapter.compare(
       credentials.password,
       user.password
-    )
+    );
 
     if (!isMatching) throw CustomError.unAuthorized("Invalid Credentials");
 
@@ -75,7 +99,7 @@ export class UserService {
         id: user.id,
         name: user.name,
         email: user.email,
-        role: user.role
+        role: user.role,
       },
     };
   }

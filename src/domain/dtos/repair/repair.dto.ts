@@ -6,7 +6,7 @@ const createRepairSchema = z.object({
     .refine((val) => !isNaN(Date.parse(val)), {
       message: "Invalid date format",
     }),
-  motors: z.string({ message: "Motors field is required" }).min(2, {
+  motorsNumber: z.string({ message: "Motors field is required" }).min(2, {
     message: "Motors field must have at least 2 characters",
   }),
   description: z
